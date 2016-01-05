@@ -1,4 +1,4 @@
-FILE = a.cpp
+FILE = main.cpp
 OUTPUT = a
 
 all:
