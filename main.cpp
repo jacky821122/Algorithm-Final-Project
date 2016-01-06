@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <queue>
+#include <algorithm>
 using namespace std;
 
 class cell
@@ -42,6 +43,8 @@ int main (int argc, char* argv[])
 	/*----------Map Information-----------*/
 	int m, n, in_x, in_y, out_x, out_y;
 	vector<vector<cell*> > c;
+
+	std::vector<cell*> vc;
 	std::vector<cell*> vcInOut;
 	std::vector<cell*> vtar, vobs;
 
@@ -59,6 +62,7 @@ int main (int argc, char* argv[])
 				{
 					cell *tmpc = new cell(i, j);
 					vcCol.push_back(tmpc);
+					vc.push_back(tmpc);
 
 					/*----------Adding All Cells' neighbor-----------*/
 					if(i - 1 != 0)
@@ -110,24 +114,7 @@ int main (int argc, char* argv[])
 	vector<cell*>::iterator it;
 	initializeSingleSource(c, c[in_x - 1][in_y - 1]);
 	priority_queue<cell> Q;
-	c[in_x - 1][in_y - 1]->is_visit = true;
-
-
-	/*cell u;
-	while(!Q.empty())
-	{
-		u = Q.top();
-		Q.pop();
-		cout << u.d << endl;
-		for(it = u.neighbor.begin(); it != u.neighbor.end(); ++it)
-		{
-			if((*it)->is_visit == false && (*it)->is_tar == false)
-			{
-				relax(&u, (*it), weight(&u, (*it)));
-			}
-		}
-		u.is_visit = true;
-	}*/
+	
 
 	/*for(int i = 0; i < c.size(); ++i)
 	{
@@ -187,7 +174,7 @@ int weight(cell* u, cell* v)
 	return (u->is_tar == true || v->is_tar == true)? 1 : 1;
 }
 
-void decrease_priority(priority_queue<cell> Q)
+void decrease_priority(priority_queue<cell> Q, int key)
 {
 
 }
