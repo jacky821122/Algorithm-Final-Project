@@ -18,14 +18,12 @@ public:
 	vector<cell*> neighbor;
 };
 
-bool operator<(const cell& c1, const cell& c2)
-{
-	return c1.d > c2.d;
-}
-
 void initializeSingleSource(vector<vector<cell*> > , cell* );
 void relax(cell* , cell* , int );
 int weight(cell* , cell*);
+void minheapify(vector<cell*>&, int);
+cell* extract_min(vector<cell*>& A);
+void decrease_key(vector<cell*>& A, cell* v, int key);
 
 int main (int argc, char* argv[])
 {
@@ -113,8 +111,16 @@ int main (int argc, char* argv[])
 
 	vector<cell*>::iterator it;
 	initializeSingleSource(c, c[in_x - 1][in_y - 1]);
-	priority_queue<cell> Q;
+
+	/*------------Build Min Heap------------*/
+	for(int i = vc.size()/2; i >= 0; --i) minheapify(vc, i+1);
+
 	
+	/*cout << extract_min(vc)->d << " (" << vc.front()->x << "," << vc.front()->y << ")" << endl;
+	cout << "size : " << vc.size() << endl;
+	decrease_key(vc, c[out_x - 1][out_y - 1], 10);
+	cout << extract_min(vc)->d << " (" << vc.front()->x << "," << vc.front()->y << ")" << endl;
+	cout << "size : " << vc.size() << endl;*/
 
 	/*for(int i = 0; i < c.size(); ++i)
 	{
@@ -174,7 +180,47 @@ int weight(cell* u, cell* v)
 	return (u->is_tar == true || v->is_tar == true)? 1 : 1;
 }
 
-void decrease_priority(priority_queue<cell> Q, int key)
+void minheapify(vector<cell*>& A, int i)
 {
+	int l = i*2, r = i*2+1;
+	int smallest;
+	if(l <= A.size() && A[l - 1]->d < A[i - 1]->d)
+		smallest = l;
+	else
+		smallest = i;
+	if(r <= A.size() && A[r - 1]->d < A[smallest - 1]->d)
+		smallest = r;
+	if(smallest != i)
+	{
+		cell* tmpc = new cell();
+		tmpc = A[i - 1];
+		A[i - 1] = A[smallest - 1];
+		A[smallest - 1] = tmpc;
+		minheapify(A, smallest);
+	}
+}
 
+cell* extract_min(vector<cell*>& A)
+{
+	if(A.size() < 1)
+	{
+		cout << "Error : Heap underflow.\n";
+		return 0;
+	}
+	cell* min = A[0];
+	A[0] = A[A.size() - 1];
+	A.pop_back();
+	minheapify(A, 1);
+	return min;
+}
+
+void decrease_key(vector<cell*>& A, cell* v, int key)
+{
+	if(key > v->d)
+	{
+		cout << "Error : New key < current key.\n";
+		return void();
+	}
+	v->d = key;
+	for(int i = A.size()/2; i >= 0; --i) minheapify(A, i+1);
 }
