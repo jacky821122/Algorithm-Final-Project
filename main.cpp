@@ -11,21 +11,27 @@ using namespace std;
 class cell
 {
 public:
-	cell(int a = 0, int b = 0){ x = a; y = b; is_in = 0; is_out = 0; is_tar = 0; is_obs = 0; is_visit = 0;};
+	cell(int a = 0, int b = 0){x = a; y = b; is_in = 0; is_out = 0; is_tar = 0; is_obs = 0; is_visit = 0; color = 'w';};
 	~cell(){};
 	int x, y, d;
+	char color;
 	bool is_in, is_out, is_tar, is_obs, is_visit;
-	cell* parent;
+	cell* dfsParent;
+	vector<cell*> parent;
 	vector<cell*> neighbor;
 };
 
-void initializeSingleSource(vector<vector<cell*> > , cell* );
-void relax(cell* , cell* , int );
+int m, n, in_x, in_y, out_x, out_y;
 int weight(cell* , cell*);
+cell* extract_min(vector<cell*>& );
+void initializeSingleSource(vector<vector<cell*> > , cell*, bool);
+void relax(cell* , cell* , int , vector<cell*>&);
 void minheapify(vector<cell*>&, int);
-cell* extract_min(vector<cell*>& A);
-void decrease_key(vector<cell*>& A, cell* v, int key);
-void print_path(cell* s, cell* v);
+void decrease_key(vector<cell*>& , cell* , int);
+void store_path(cell* , cell* , vector<vector<cell*> >&, vector<cell*>&, vector<cell*>&);
+void dfs_visit(cell* );
+void dfs_iterative(cell* );
+void dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
 
 int main (int argc, char* argv[])
 {
@@ -41,7 +47,6 @@ int main (int argc, char* argv[])
 	} 
 
 	/*----------Map Information-----------*/
-	int m, n, in_x, in_y, out_x, out_y;
 	vector<vector<cell*> > c;
 
 	std::vector<cell*> Q;
@@ -111,28 +116,52 @@ int main (int argc, char* argv[])
 		lineCount++;
 	}
 
+	vector<vector<cell*> > vPath;
 	vector<cell*>::iterator it;
-	initializeSingleSource(c, c[in_x - 1][in_y - 1]);
-	cell* u;
+	vector<cell*> Path;
 
-	/*------------Build Min Heap------------*/
-	for(int i = Q.size()/2; i >= 0; --i) minheapify(Q, i+1);
+	// if(vtar.empty())
+	// {
+		dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
+		store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
+	// }
 
-	/*------------Dijkstra Algorithm------------*/
-	while(!Q.empty())
+	// cell* tmp;
+	// while(!vtar.empty())
+	// {
+
+		// tmp = vtar.back();
+		// vtar.pop_back();
+
+		// cout << tmp->x << "," << tmp->y << endl;
+
+		// dijkstra(c, c[in_x - 1][in_y - 1], tmp, Q, 1);
+		// cout << tmp->parent.front()->x << tmp->parent.front()->y << endl;
+// cin.ignore(cin.rdbuf()->in_avail()+1);
+		// store_path(c[in_x - 1][in_y - 1], tmp, vPath, Path, vtar);
+		// dijkstra(c, tmp, c[out_x - 1][out_y - 1], Q, 0);
+		// dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
+		// store_path(tmp, c[out_x - 1][out_y - 1], vPath, Path, vtar);
+		// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
+		// break;
+
+	// }
+
+	for(int i = 0; i < vPath.size(); ++i)
 	{
-		u = extract_min(Q);
-		if(u == c[out_x - 1][out_y - 1]) break;
-		u->is_visit = true;
-		for(it = u->neighbor.begin(); it != u->neighbor.end(); ++it)
+		for(int j = 0; j < vPath[i].size(); ++j)
 		{
-			if((*it)->is_obs == true || (*it)->is_visit == true) continue;
-			relax(u, (*it), weight(u, (*it)));
+			cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
 		}
+		cout << endl;
 	}
-	print_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1]);
-	cout << endl;
-		
+
+
+	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath);
+	// store_path(c[in_x - 1][in_y - 1], tmp, vPath);
+
+	// dfs_iterative(c[out_x - 1][out_y - 1]);
+
 	
 	/*cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
 	cout << "size : " << Q.size() << endl;
@@ -170,28 +199,31 @@ int main (int argc, char* argv[])
 	}*/		/*--------------Input and Output Cells' Coordinate--------------------*/
 }
 
-void initializeSingleSource(vector<vector<cell*> > G, cell* s)
+void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
 {
 	for(int i = 0; i < G.size(); ++i)
 	{
 		for(int j = 0; j < G[i].size(); ++j)
 		{
 			G[i][j]->d = 1e9;
-			G[i][j]->parent = NULL;
+			G[i][j]->parent.clear();
+			if(reset == 1)
+			G[i][j]->is_visit = false;
 		}
 	}
 	s->d = 0;
 }
-// cin.ignore(cin.rdbuf()->in_avail()+1);
 
-void relax(cell* u, cell* v, int w)
+void relax(cell* u, cell* v, int w, vector<cell*>& Q)
 {
 	if(v->d > u->d + w)
 	{
 		v->d = u->d + w;
-		v->parent = u;
-		// if(v->is_tar == true)
+		v->parent.clear();
+		v->parent.push_back(u);
+		decrease_key(Q, v, v->d);
 	}
+	else if(v->d == u->d + w && v->is_out == true) v->parent.push_back(u);
 }
 
 int weight(cell* u, cell* v)
@@ -244,18 +276,130 @@ void decrease_key(vector<cell*>& A, cell* v, int key)
 	for(int i = A.size()/2; i >= 0; --i) minheapify(A, i+1);
 }
 
-void print_path(cell* s, cell* v)
+void store_path(cell* s, cell* v, vector<vector<cell*> >& vPath, vector<cell*>& Path, vector<cell*>& vtar)
 {
 	if(v == s)
-		cout << "(" << s->x << "," << s->y << ")" << " ";
-	else if(v->parent == NULL)
+	{
+		// cout << "(" << s->x << "," << s->y << ")" << " ";
+		/*if(v->is_tar == true)
+		{
+			for(vector<cell*>::iterator it2 = vtar.begin(); it2 != vtar.end(); ++it2)
+			{
+				if((*it2) == v)
+				{
+					vtar.erase(it2);
+					break;
+				}
+			}
+			return void();
+		}*/
+		Path.push_back(v);
+	}
+	else if(v->parent.empty() && s->is_in == true && v->is_out == true)
 	{
 		cout << "No path from (" << s->x << "," << s->y << ") to ";
 		cout << "(" << v->x << "," << v->y << ") exists.\n";
+		Path.clear();
+		return void();
+	}
+	else if(v->parent.empty())
+	{
+		Path.clear();
+		return void();
 	}
 	else
 	{
-		print_path(s, v->parent);
-		cout << "(" << v->x << "," << v->y << ")" << " ";
+		for(vector<cell*>::iterator it = v->parent.begin(); it != v->parent.end(); ++it)
+		{
+			// cout << "(" << (*it)->x << "," << (*it)->y << ")" << " ";
+			store_path(s, (*it), vPath, Path, vtar);
+			// cout << "(" << v->x << "," << v->y << ")" << " ";
+			
+			// if(v->is_tar == true)
+			// {
+				// for(vector<cell*>::iterator it2 = vtar.begin(); it2 != vtar.end(); ++it2)
+				// {
+					// cout << (*it2)->x << " " << (*it2)->y << endl;
+					// if((*it2) == v)
+					// {
+						// vtar.erase(it2);
+						// break;
+					// }
+				// }
+			// }
+			Path.push_back(v);
+			if(v->is_out == true)
+			{
+				vPath.push_back(Path);
+				Path.clear();
+				return void();
+				// cout << endl;
+			}
+		}
+	}
+}
+
+void dfs_visit(cell* u)
+{
+	u->color = 'g';
+	for(vector<cell*>::iterator it = u->parent.begin(); it != u->parent.end(); ++it)
+	{
+		if((*it)->color == 'w')
+		{
+			(*it)->dfsParent = u;
+			dfs_visit((*it));
+		}
+	}
+	u->color = 'b';
+	cout << u->x << "," << u->y << endl;
+}
+
+void dfs_iterative(cell* v)
+{
+	stack<cell*> S;
+	cell* u;
+	S.push(v);
+	while(!S.empty())
+	{
+		v = S.top();
+		S.pop();
+		if(v->color != 'b')
+		{
+			v->color = 'b';
+			cout << v->x << "," << v->y << endl;
+			for(vector<cell*>::iterator it = v->parent.begin(); it != v->parent.end(); ++it)
+				S.push((*it));
+		}
+	}
+}
+
+void dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*> Q, bool reset)
+{
+	initializeSingleSource(c, source, reset);
+
+	vector<cell*>::iterator it;
+	cell* u;
+	/*------------Build Min Heap------------*/
+	for(int i = Q.size()/2; i >= 0; --i) minheapify(Q, i+1);
+	/*cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
+	cout << "size : " << Q.size() << endl;
+	decrease_key(Q, c[out_x - 1][out_y - 1], 10);
+	cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
+	cout << "size : " << Q.size() << endl;*/
+
+	while(!Q.empty())
+	{
+		u = extract_min(Q);
+
+		u->is_visit = true;
+		if(u == target) 
+			{
+				return void();
+			}
+		for(it = u->neighbor.begin(); it != u->neighbor.end(); ++it)
+		{
+			if((*it)->is_obs == true || (*it)->is_visit == true) continue;
+			relax(u, (*it), weight(u, (*it)), Q);
+		}
 	}
 }
