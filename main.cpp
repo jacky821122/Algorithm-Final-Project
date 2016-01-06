@@ -3,17 +3,28 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <queue>
 using namespace std;
 
 class cell
 {
 public:
-	cell(int a, int b){ x = a; y = b; is_in = 0; is_out = 0; is_tar = 0; is_obs = 0; is_visit = 0;};
+	cell(int a = 0, int b = 0){ x = a; y = b; is_in = 0; is_out = 0; is_tar = 0; is_obs = 0; is_visit = 0;};
 	~cell(){};
-	int x, y;
+	int x, y, d;
 	bool is_in, is_out, is_tar, is_obs, is_visit;
-	vector<cell*> parent, child;
+	cell* parent;
+	vector<cell*> neighbor;
 };
+
+bool operator<(const cell& c1, const cell& c2)
+{
+	return c1.d > c2.d;
+}
+
+void initializeSingleSource(vector<vector<cell*> > , cell* );
+void relax(cell* , cell* , int );
+int weight(cell* , cell*);
 
 int main (int argc, char* argv[])
 {
@@ -49,19 +60,19 @@ int main (int argc, char* argv[])
 					cell *tmpc = new cell(i, j);
 					vcCol.push_back(tmpc);
 
-					/*----------Adding All Cells' child-----------*/
+					/*----------Adding All Cells' neighbor-----------*/
 					if(i - 1 != 0)
 					{
-						tmpc->child.push_back(c[i - 2][j - 1]);
-						c[i - 2][j - 1]->child.push_back(tmpc);
+						tmpc->neighbor.push_back(c[i - 2][j - 1]);
+						c[i - 2][j - 1]->neighbor.push_back(tmpc);
 					}
 					if(j - 1 != 0)
 					{
 						std::vector<cell*>::reverse_iterator rit = vcCol.rbegin();
-						tmpc->child.push_back(*(++rit));
-						(*rit)->child.push_back(tmpc);
+						tmpc->neighbor.push_back(*(++rit));
+						(*rit)->neighbor.push_back(tmpc);
 					}
-					/*----------Adding All Cells' child-----------*/
+					/*----------Adding All Cells' neighbor-----------*/
 				}
 				c.push_back(vcCol);
 			}
@@ -96,14 +107,36 @@ int main (int argc, char* argv[])
 		lineCount++;
 	}
 
-	/*for(int i = 0; i < m; ++i)
+	vector<cell*>::iterator it;
+	initializeSingleSource(c, c[in_x - 1][in_y - 1]);
+	priority_queue<cell> Q;
+	c[in_x - 1][in_y - 1]->is_visit = true;
+
+
+	/*cell u;
+	while(!Q.empty())
 	{
-		for(int j = 0 ; j < n; ++j)
+		u = Q.top();
+		Q.pop();
+		cout << u.d << endl;
+		for(it = u.neighbor.begin(); it != u.neighbor.end(); ++it)
+		{
+			if((*it)->is_visit == false && (*it)->is_tar == false)
+			{
+				relax(&u, (*it), weight(&u, (*it)));
+			}
+		}
+		u.is_visit = true;
+	}*/
+
+	/*for(int i = 0; i < c.size(); ++i)
+	{
+		for(int j = 0 ; j < c[i].size(); ++j)
 		{
 			cout << "C (" << c[i][j]->x << "," << c[i][j]->y << ") : ";
-			cout << c[i][j]->child.size() << endl;
+			cout << c[i][j]->neighbor.size() << endl;
 		}
-	}*/		/*--------------All Cells' Coordinate and Their #(child)--------------------*/
+	}*/		/*--------------All Cells' Coordinate and Their #(neighbor)--------------------*/
 
 	/*for(std::vector<cell*>::iterator it = vobs.begin(); it != vobs.end(); ++it)
 	{		
@@ -126,3 +159,35 @@ int main (int argc, char* argv[])
 	}*/		/*--------------Input and Output Cells' Coordinate--------------------*/
 }
 
+void initializeSingleSource(vector<vector<cell*> > G, cell* s)
+{
+	for(int i = 0; i < G.size(); ++i)
+	{
+		for(int j = 0; j < G[i].size(); ++j)
+		{
+			G[i][j]->d = 1e9;
+			G[i][j]->parent = NULL;
+		}
+	}
+	s->d = 0;
+}
+// cin.ignore(cin.rdbuf()->in_avail()+1);
+
+void relax(cell* u, cell* v, int w)
+{
+	if(v->d > u->d + w)
+	{
+		v->d = u->d + w;
+		v->parent = u;
+	}
+}
+
+int weight(cell* u, cell* v)
+{
+	return (u->is_tar == true || v->is_tar == true)? 1 : 1;
+}
+
+void decrease_priority(priority_queue<cell> Q)
+{
+
+}
