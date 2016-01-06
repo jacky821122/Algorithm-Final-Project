@@ -5,6 +5,7 @@
 #include <sstream>
 #include <queue>
 #include <algorithm>
+#include <stack>
 using namespace std;
 
 class cell
@@ -24,6 +25,7 @@ int weight(cell* , cell*);
 void minheapify(vector<cell*>&, int);
 cell* extract_min(vector<cell*>& A);
 void decrease_key(vector<cell*>& A, cell* v, int key);
+void print_path(cell* s, cell* v);
 
 int main (int argc, char* argv[])
 {
@@ -42,7 +44,7 @@ int main (int argc, char* argv[])
 	int m, n, in_x, in_y, out_x, out_y;
 	vector<vector<cell*> > c;
 
-	std::vector<cell*> vc;
+	std::vector<cell*> Q;
 	std::vector<cell*> vcInOut;
 	std::vector<cell*> vtar, vobs;
 
@@ -60,7 +62,7 @@ int main (int argc, char* argv[])
 				{
 					cell *tmpc = new cell(i, j);
 					vcCol.push_back(tmpc);
-					vc.push_back(tmpc);
+					Q.push_back(tmpc);
 
 					/*----------Adding All Cells' neighbor-----------*/
 					if(i - 1 != 0)
@@ -111,16 +113,32 @@ int main (int argc, char* argv[])
 
 	vector<cell*>::iterator it;
 	initializeSingleSource(c, c[in_x - 1][in_y - 1]);
+	cell* u;
 
 	/*------------Build Min Heap------------*/
-	for(int i = vc.size()/2; i >= 0; --i) minheapify(vc, i+1);
+	for(int i = Q.size()/2; i >= 0; --i) minheapify(Q, i+1);
 
+	/*------------Dijkstra Algorithm------------*/
+	while(!Q.empty())
+	{
+		u = extract_min(Q);
+		if(u == c[out_x - 1][out_y - 1]) break;
+		u->is_visit = true;
+		for(it = u->neighbor.begin(); it != u->neighbor.end(); ++it)
+		{
+			if((*it)->is_obs == true || (*it)->is_visit == true) continue;
+			relax(u, (*it), weight(u, (*it)));
+		}
+	}
+	print_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1]);
+	cout << endl;
+		
 	
-	/*cout << extract_min(vc)->d << " (" << vc.front()->x << "," << vc.front()->y << ")" << endl;
-	cout << "size : " << vc.size() << endl;
-	decrease_key(vc, c[out_x - 1][out_y - 1], 10);
-	cout << extract_min(vc)->d << " (" << vc.front()->x << "," << vc.front()->y << ")" << endl;
-	cout << "size : " << vc.size() << endl;*/
+	/*cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
+	cout << "size : " << Q.size() << endl;
+	decrease_key(Q, c[out_x - 1][out_y - 1], 10);
+	cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
+	cout << "size : " << Q.size() << endl;*/		/*-----------Testing Min_Queue-----------------*/
 
 	/*for(int i = 0; i < c.size(); ++i)
 	{
@@ -172,12 +190,13 @@ void relax(cell* u, cell* v, int w)
 	{
 		v->d = u->d + w;
 		v->parent = u;
+		// if(v->is_tar == true)
 	}
 }
 
 int weight(cell* u, cell* v)
 {
-	return (u->is_tar == true || v->is_tar == true)? 1 : 1;
+	return (u->is_tar == true || v->is_tar == true)? 1 : 50;
 }
 
 void minheapify(vector<cell*>& A, int i)
@@ -223,4 +242,20 @@ void decrease_key(vector<cell*>& A, cell* v, int key)
 	}
 	v->d = key;
 	for(int i = A.size()/2; i >= 0; --i) minheapify(A, i+1);
+}
+
+void print_path(cell* s, cell* v)
+{
+	if(v == s)
+		cout << "(" << s->x << "," << s->y << ")" << " ";
+	else if(v->parent == NULL)
+	{
+		cout << "No path from (" << s->x << "," << s->y << ") to ";
+		cout << "(" << v->x << "," << v->y << ") exists.\n";
+	}
+	else
+	{
+		print_path(s, v->parent);
+		cout << "(" << v->x << "," << v->y << ")" << " ";
+	}
 }
