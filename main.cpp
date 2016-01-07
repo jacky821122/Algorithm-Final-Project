@@ -119,8 +119,8 @@ int main (int argc, char* argv[])
 
 	int tar_num = vtar.size();
 	vector<vector<cell*> > vPath;
-	vector<cell*>::iterator it, it1;
 	vector<cell*> Path, Path2;
+	vector<cell*>::iterator it, it1;
 	vector<cell*> vtargetPassThrough;
 
 	while(vtar.size() != 0)
@@ -149,8 +149,10 @@ int main (int argc, char* argv[])
 		dijkstra(c, tmpTarget, c[out_x - 1][out_y - 1], Q, 0);
 		Path2 = dfs_iterative(c[out_x - 1][out_y - 1]);
 
+		// cout << vtar.size() << endl;
 		for(it = Path2.begin(); it != Path2.end(); ++it)
 		{
+		// cout << "(" << (*it)->x << "," << (*it)->y << ")";
 			(*it)->is_path = true;
 			if((*it)->is_tar)
 			{
@@ -165,26 +167,27 @@ int main (int argc, char* argv[])
 				(*it)->is_tar = false;
 			}
 		}
+		// cout << endl;
 
-		Path.insert(Path.end(), Path2.begin(), Path2.end());
-		break;
+		Path.insert(Path.end(), ++Path2.begin(), Path2.end());
+		vPath.push_back(Path);
 	}
-	// cout << vtar.size() << endl;
+	// cout << endl << vtar.size() << endl;
 
-	for(int i = 0; i < Path.size(); ++i)
+	/*for(int i = 0; i < Path.size(); ++i)
 	{
-		// cout <<  "(" << Path[i]->x << "," << Path[i]->y << ")";
+		cout <<  "(" << Path[i]->x << "," << Path[i]->y << ")";
 	}
-	// cout << endl;
+	cout << endl;*/
 
-	// for(int i = 0; i < vPath.size(); ++i)
-	// {
-	// 	for(int j = 0; j < vPath[i].size(); ++j)
-	// 	{
-	// 		cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
-	// 	}
-	// 	cout << endl;
-	// }
+	for(int i = 0; i < vPath.size(); ++i)
+	{
+		for(int j = 0; j < vPath[i].size(); ++j)
+		{
+			cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
+		}
+		cout << endl;
+	}
 
 
 	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath);
@@ -263,12 +266,13 @@ void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
 		{
 			G[i][j]->d = 1e9;
 			G[i][j]->parent.clear();
+			G[i][j]->is_visit = false;
+			
 			if(reset == 1)
 			G[i][j]->is_path = false;
 		}
 	}
 	s->d = 0;
-	s->parent.clear();
 }
 
 void relax(cell* u, cell* v, int w, vector<cell*>& Q)
@@ -425,7 +429,6 @@ vector<cell*> dfs_iterative(cell* v)
 		S.pop();
 		if(!v->parent.empty())
 		{
-			cout << "(" << v->x << "," << v->y << ")" << endl;
 			for(vector<cell*>::iterator it = v->parent.begin(); it != v->parent.end(); ++it)
 			{
 				S.push((*it));
@@ -448,7 +451,7 @@ vector<cell*> dfs_iterative(cell* v)
 				if(tmpc->is_tar) ++tmpTPT;
 				// cout << "(" << tmpc->x << "," << tmpc->y << ")";
 			}
-			if(tmpTPT > targetPassThrough) path = tmpPath;
+			if(tmpTPT >= targetPassThrough) path = tmpPath;
 			// cout << endl;
 		}
 	}
@@ -472,7 +475,6 @@ void dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 	while(!Q.empty())
 	{
 		u = extract_min(Q);
-
 		u->is_visit = true;
 		if(u == target) 
 			{
@@ -481,7 +483,18 @@ void dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 		for(it = u->neighbor.begin(); it != u->neighbor.end(); ++it)
 		{
 			if((*it)->is_obs || (*it)->is_visit || (*it)->is_path) continue;
+			// cout << "(" << (*it)->x << "," << (*it)->y << ")";
+
 			relax(u, (*it), weight(u, (*it)), Q);
 		}
 	}
+	/*cout << endl;
+	for(int i = 0; i < c.size(); ++i)
+	{
+		for(int j = 0 ; j < c[i].size(); ++j)
+		{
+			cout << "C (" << c[i][j]->x << "," << c[i][j]->y << ") : ";
+			cout << c[i][j]->d << endl;
+		}
+	}*/
 }
