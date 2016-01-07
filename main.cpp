@@ -32,6 +32,7 @@ void store_path(cell* , cell* , vector<vector<cell*> >&, vector<cell*>&, vector<
 void dfs_visit(cell* );
 void dfs_iterative(cell* );
 void dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
+void path_select(cell* );
 
 int main (int argc, char* argv[])
 {
@@ -120,41 +121,18 @@ int main (int argc, char* argv[])
 	vector<cell*>::iterator it;
 	vector<cell*> Path;
 
-	// if(vtar.empty())
+	dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
+	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
+	path_select(c[out_x - 1][out_y - 1]);
+
+	// for(int i = 0; i < vPath.size(); ++i)
 	// {
-		dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
-		store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
+	// 	for(int j = 0; j < vPath[i].size(); ++j)
+	// 	{
+	// 		cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
+	// 	}
+	// 	cout << endl;
 	// }
-
-	// cell* tmp;
-	// while(!vtar.empty())
-	// {
-
-		// tmp = vtar.back();
-		// vtar.pop_back();
-
-		// cout << tmp->x << "," << tmp->y << endl;
-
-		// dijkstra(c, c[in_x - 1][in_y - 1], tmp, Q, 1);
-		// cout << tmp->parent.front()->x << tmp->parent.front()->y << endl;
-// cin.ignore(cin.rdbuf()->in_avail()+1);
-		// store_path(c[in_x - 1][in_y - 1], tmp, vPath, Path, vtar);
-		// dijkstra(c, tmp, c[out_x - 1][out_y - 1], Q, 0);
-		// dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
-		// store_path(tmp, c[out_x - 1][out_y - 1], vPath, Path, vtar);
-		// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
-		// break;
-
-	// }
-
-	for(int i = 0; i < vPath.size(); ++i)
-	{
-		for(int j = 0; j < vPath[i].size(); ++j)
-		{
-			cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
-		}
-		cout << endl;
-	}
 
 
 	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath);
@@ -199,6 +177,27 @@ int main (int argc, char* argv[])
 	}*/		/*--------------Input and Output Cells' Coordinate--------------------*/
 }
 
+void path_select(cell* target)
+{
+	vector<stack<cell*> > vPath;
+	cout << target->parent.size() << endl;
+	for(vector<cell*>::iterator it = target->parent.begin(); it != target->parent.end(); ++it)
+	{
+		cout << "(" << (*it)->x << "," << (*it)->y << ")" << (*it)->parent.size() << endl;
+		stack<cell*> S;
+		cell* tmpc;
+		tmpc = (*it);
+		cout << "(" << tmpc->x << "," << tmpc->y << ")";
+		while(!tmpc->parent.empty())
+		{
+			S.push(tmpc);
+			tmpc = tmpc->parent.back();
+			cout << "(" << tmpc->x << "," << tmpc->y << ")";
+		}
+		cout << endl;
+	}
+}
+
 void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
 {
 	for(int i = 0; i < G.size(); ++i)
@@ -216,10 +215,10 @@ void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
 
 void relax(cell* u, cell* v, int w, vector<cell*>& Q)
 {
-	if(v->d > u->d + w)
+	if(v->d >= u->d + w)
 	{
 		v->d = u->d + w;
-		v->parent.clear();
+		// v->parent.clear();
 		v->parent.push_back(u);
 		decrease_key(Q, v, v->d);
 	}
@@ -394,7 +393,7 @@ void dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 		u->is_visit = true;
 		if(u == target) 
 			{
-				return void();
+				// return void();
 			}
 		for(it = u->neighbor.begin(); it != u->neighbor.end(); ++it)
 		{
