@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
 
 	dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
 	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
-	path_select(c[out_x - 1][out_y - 1]);
+	dfs_iterative(c[out_x - 1][out_y - 1]);
 
 	// for(int i = 0; i < vPath.size(); ++i)
 	// {
@@ -188,13 +188,18 @@ void path_select(cell* target)
 		cell* tmpc;
 		tmpc = (*it);
 		cout << "(" << tmpc->x << "," << tmpc->y << ")";
-		while(!tmpc->parent.empty())
+		/*while(!tmpc->parent.empty())
 		{
 			S.push(tmpc);
 			tmpc = tmpc->parent.back();
 			cout << "(" << tmpc->x << "," << tmpc->y << ")";
 		}
-		cout << endl;
+		cout << endl;*/
+		while(!tmpc->parent.empty())
+		{
+			S.push(tmpc);
+			tmpc = tmpc->parent.back();
+		}
 	}
 }
 
@@ -358,16 +363,32 @@ void dfs_iterative(cell* v)
 	stack<cell*> S;
 	cell* u;
 	S.push(v);
+	v->dfsParent = NULL;
 	while(!S.empty())
 	{
 		v = S.top();
 		S.pop();
-		if(v->color != 'b')
+		if(!v->parent.empty())
 		{
-			v->color = 'b';
-			cout << v->x << "," << v->y << endl;
 			for(vector<cell*>::iterator it = v->parent.begin(); it != v->parent.end(); ++it)
+			{
 				S.push((*it));
+				(*it)->dfsParent = v;
+			}
+		}
+		else
+		{
+			cout << "(" << v->x << "," << v->y << ")";
+			stack<cell*> S;
+			cell* tmpc;
+			tmpc = v;
+			while(tmpc->dfsParent != NULL)
+			{
+				S.push(tmpc);
+				tmpc = tmpc->dfsParent;
+				cout << "(" << tmpc->x << "," << tmpc->y << ")";
+			}
+			cout << endl;
 		}
 	}
 }
