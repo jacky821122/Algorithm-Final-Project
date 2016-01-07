@@ -30,9 +30,9 @@ void minheapify(vector<cell*>&, int);
 void decrease_key(vector<cell*>& , cell* , int);
 void store_path(cell* , cell* , vector<vector<cell*> >&, vector<cell*>&, vector<cell*>&);
 void dfs_visit(cell* );
-void dfs_iterative(cell* );
 void dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
 void path_select(cell* );
+vector<cell*> dfs_iterative(cell* );
 
 int main (int argc, char* argv[])
 {
@@ -123,7 +123,13 @@ int main (int argc, char* argv[])
 
 	dijkstra(c, c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], Q, 1);
 	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath, Path, vtar);
-	dfs_iterative(c[out_x - 1][out_y - 1]);
+	Path = dfs_iterative(c[out_x - 1][out_y - 1]);
+
+	for(int i = 0; i < Path.size(); ++i)
+	{
+		cout <<  "(" << Path[i]->x << "," << Path[i]->y << ")";
+	}
+	cout << endl;
 
 	// for(int i = 0; i < vPath.size(); ++i)
 	// {
@@ -358,7 +364,7 @@ void dfs_visit(cell* u)
 	cout << u->x << "," << u->y << endl;
 }
 
-void dfs_iterative(cell* v)
+vector<cell*> dfs_iterative(cell* v)
 {
 	int targetPassThrough = 0;
 	vector<cell*> path;
@@ -398,11 +404,7 @@ void dfs_iterative(cell* v)
 			// cout << endl;
 		}
 	}
-	/*for(vector<cell*>::iterator it = path.begin(); it != path.end(); ++it)
-	{
-		cout << "(" << (*it)->x << "," << (*it)->y << ")";
-	}
-	cout << endl;*/
+	return path;
 }
 
 void dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*> Q, bool reset)
