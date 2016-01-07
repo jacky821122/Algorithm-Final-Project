@@ -11,11 +11,11 @@ using namespace std;
 class cell
 {
 public:
-	cell(int a = 0, int b = 0){x = a; y = b; is_in = 0; is_out = 0; is_tar = 0; is_obs = 0; is_visit = 0; color = 'w';};
+	cell(int a = 0, int b = 0){x = a; y = b; is_in = 0; is_out = 0; is_tar = 0; is_obs = 0; is_visit = 0; color = 'w'; is_path = 0;};
 	~cell(){};
 	int x, y, d;
 	char color;
-	bool is_in, is_out, is_tar, is_obs, is_visit;
+	bool is_in, is_out, is_tar, is_obs, is_visit, is_path;
 	cell* dfsParent;
 	vector<cell*> parent;
 	vector<cell*> neighbor;
@@ -360,6 +360,8 @@ void dfs_visit(cell* u)
 
 void dfs_iterative(cell* v)
 {
+	int targetPassThrough = 0;
+	vector<cell*> path;
 	stack<cell*> S;
 	cell* u;
 	S.push(v);
@@ -378,19 +380,29 @@ void dfs_iterative(cell* v)
 		}
 		else
 		{
-			cout << "(" << v->x << "," << v->y << ")";
-			stack<cell*> S;
+			int tmpTPT = 0;
+			std::vector<cell*> tmpPath;
+			tmpPath.push_back(v);
+			if(v->is_tar) ++tmpTPT;
+			// cout << "(" << v->x << "," << v->y << ")";
 			cell* tmpc;
 			tmpc = v;
 			while(tmpc->dfsParent != NULL)
 			{
-				S.push(tmpc);
 				tmpc = tmpc->dfsParent;
-				cout << "(" << tmpc->x << "," << tmpc->y << ")";
+				tmpPath.push_back(tmpc);
+				if(tmpc->is_tar) ++tmpTPT;
+				// cout << "(" << tmpc->x << "," << tmpc->y << ")";
 			}
-			cout << endl;
+			if(tmpTPT > targetPassThrough) path = tmpPath;
+			// cout << endl;
 		}
 	}
+	/*for(vector<cell*>::iterator it = path.begin(); it != path.end(); ++it)
+	{
+		cout << "(" << (*it)->x << "," << (*it)->y << ")";
+	}
+	cout << endl;*/
 }
 
 void dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*> Q, bool reset)
