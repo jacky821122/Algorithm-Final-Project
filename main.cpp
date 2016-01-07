@@ -189,6 +189,17 @@ int main (int argc, char* argv[])
 		cout << endl;
 	}
 
+	ofstream fout(argv[2]);
+	fout << vPath.size() << endl;
+	for(int i = 0; i < vPath.size(); ++i)
+	{
+		fout << vPath[i].size() << " ";
+		for(int j = 0; j < vPath[i].size(); ++j)
+		{
+			fout << vPath[i][j]->x << " " << vPath[i][j]->y << " ";
+		}
+		fout << endl;
+	}
 
 	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath);
 	// store_path(c[in_x - 1][in_y - 1], tmp, vPath);
