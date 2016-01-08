@@ -123,55 +123,38 @@ int main (int argc, char* argv[])
 	vector<cell*>::iterator it, it1;
 	vector<cell*> vtargetPassThrough;
 
-	while(vtar.size() != 0)
+	for(int i = 0; i < m; ++i)
 	{
-		cell* tmpTarget = vtar.front();
-		dijkstra(c, c[in_x - 1][in_y - 1], tmpTarget, Q, 1);
-		Path = dfs_iterative(tmpTarget);
-
-		for(it = Path.begin(); it != Path.end(); ++it)
+		for(int j = 0; j < n; ++j)
 		{
-			(*it)->is_path = true;
-			if((*it)->is_tar)
+			if(c[i][j]->is_tar)
 			{
-				for(it1 = vtar.begin(); it1 != vtar.end(); ++it1)
+				cell*tmpTarget = c[i][j];
+				dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1);
+				Path = dfs_iterative(tmpTarget);
+
+				for(it = Path.begin(); it != Path.end(); ++it)
 				{
-					if((*it1) == (*it))
-					{
-						vtar.erase(it1);
-						break;
-					}
+					(*it)->is_path = true;
+					if((*it)->is_tar) (*it)->is_tar = false;
 				}
-				(*it)->is_tar = false;
+
+				dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0);
+				Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+
+				for(it = Path2.begin(); it != Path2.end(); ++it)
+				{
+					(*it)->is_path = true;
+					if((*it)->is_tar) (*it)->is_tar = false;
+				}
+
+				Path.insert(Path.end(), ++Path2.begin(), Path2.end());
+				vPath.push_back(Path);
 			}
 		}
-		
-		dijkstra(c, tmpTarget, c[out_x - 1][out_y - 1], Q, 0);
-		Path2 = dfs_iterative(c[out_x - 1][out_y - 1]);
-
-		// cout << vtar.size() << endl;
-		for(it = Path2.begin(); it != Path2.end(); ++it)
-		{
-		// cout << "(" << (*it)->x << "," << (*it)->y << ")";
-			(*it)->is_path = true;
-			if((*it)->is_tar)
-			{
-				for(it1 = vtar.begin(); it1 != vtar.end(); ++it1)
-				{
-					if((*it1) == (*it))
-					{
-						vtar.erase(it1);
-						break;
-					}
-				}
-				(*it)->is_tar = false;
-			}
-		}
-		// cout << endl;
-
-		Path.insert(Path.end(), ++Path2.begin(), Path2.end());
-		vPath.push_back(Path);
 	}
+
+	
 	// cout << endl << vtar.size() << endl;
 
 	/*for(int i = 0; i < Path.size(); ++i)
@@ -180,14 +163,14 @@ int main (int argc, char* argv[])
 	}
 	cout << endl;*/
 
-	for(int i = 0; i < vPath.size(); ++i)
+	/*for(int i = 0; i < vPath.size(); ++i)
 	{
 		for(int j = 0; j < vPath[i].size(); ++j)
 		{
 			cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
 		}
 		cout << endl;
-	}
+	}*/
 
 	ofstream fout(argv[2]);
 	fout << vPath.size() << endl;
@@ -291,7 +274,7 @@ void relax(cell* u, cell* v, int w, vector<cell*>& Q)
 	if(v->d >= u->d + w)
 	{
 		v->d = u->d + w;
-		// v->parent.clear();
+		v->parent.clear();
 		v->parent.push_back(u);
 		decrease_key(Q, v, v->d);
 	}
