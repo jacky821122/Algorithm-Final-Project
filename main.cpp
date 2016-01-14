@@ -32,7 +32,7 @@ void store_path(cell* , cell* , vector<vector<cell*> >&, vector<cell*>&, vector<
 void dfs_visit(cell* );
 bool dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
 void path_select(cell* );
-vector<cell*> dfs_iterative(cell* );
+vector<cell*> dfs_iterative(cell* , bool&);
 
 int main (int argc, char* argv[])
 {
@@ -122,6 +122,7 @@ int main (int argc, char* argv[])
 	vector<cell*> Path, Path2;
 	vector<cell*>::iterator it, it1;
 	vector<cell*> vtargetPassThrough;
+	bool nonNeighboringViolation;
 
 	for(int i = 0; i < m; ++i)
 	{
@@ -135,7 +136,7 @@ int main (int argc, char* argv[])
 					cout << "No path from (" << in_x << "," << in_y << ") to ";
 					cout << "(" << tmpTarget->x << "," << tmpTarget->y << ") exists.\n";
 				}
-				Path = dfs_iterative(tmpTarget);
+				Path = dfs_iterative(tmpTarget, nonNeighboringViolation);
 
 				for(it = Path.begin(); it != Path.end(); ++it)
 				{
@@ -157,7 +158,7 @@ int main (int argc, char* argv[])
 					// }
 					// cout << endl;
 				}
-				Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+				Path2 = dfs_iterative(c[out_x-1][out_y-1], nonNeighboringViolation);
 
 				for(it = Path2.begin(); it != Path2.end(); ++it)
 				{
@@ -400,12 +401,13 @@ void store_path(cell* s, cell* v, vector<vector<cell*> >& vPath, vector<cell*>& 
 	}
 }
 
-vector<cell*> dfs_iterative(cell* v)
+vector<cell*> dfs_iterative(cell* v, bool &nonNeighboringViolation)
 {
 	int targetPassThrough = 0;
 	vector<cell*> path;
+	vector<cell*>::iterator it, it1;
 	stack<cell*> S;
-	cell* u;
+	cell* u, *terminal = v, *source;
 	S.push(v);
 	v->dfsParent = NULL;
 	while(!S.empty())
@@ -422,9 +424,12 @@ vector<cell*> dfs_iterative(cell* v)
 		}
 		else
 		{
+			source = v;
+			nonNeighboringViolation = false;
 			int tmpTPT = 0;
 			std::vector<cell*> tmpPath;
 			tmpPath.push_back(v);
+			v->is_path = true;
 			if(v->is_tar) ++tmpTPT;
 			// cout << "(" << v->x << "," << v->y << ")";
 			cell* tmpc;
@@ -432,14 +437,36 @@ vector<cell*> dfs_iterative(cell* v)
 			while(tmpc->dfsParent != NULL)
 			{
 				tmpc = tmpc->dfsParent;
+				tmpc->is_path = true;
 				tmpPath.push_back(tmpc);
 				if(tmpc->is_tar) ++tmpTPT;
 				// cout << "(" << tmpc->x << "," << tmpc->y << ")";
 			}
-			if(tmpTPT >= targetPassThrough) path = tmpPath;
+			for(it = tmpPath.begin(); it != tmpPath.end(); ++it)
+			{
+				if(!(*it)->is_in && !(*it)->is_out)
+				for(it1 = (*it)->neighbor.begin(); it1 != (*it)->neighbor.end(); ++it1)
+				{
+					if((*it1) != (*it)->dfsParent && (*it1)->is_path)
+					{
+						nonNeighboringViolation = true;
+						break;
+					}
+				}
+				if(nonNeighboringViolation) break;	
+			}
+			if(!nonNeighboringViolation)
+			{
+				path = tmpPath;
+				return path;
+			}
+			tmpPath.clear();
+			// if(tmpTPT >= targetPassThrough) path = tmpPath;
 			// cout << endl;
 		}
 	}
+	cout << "No path from (" << source->x << "," << source->y << ") to ";
+	cout << "(" << terminal->x << "," << terminal->y << ") exists.\n";
 	return path;
 }
 
@@ -472,14 +499,14 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 			{
 				// if(reset && (*it)->is_out) continue;
 				bool nonNeighboringViolation = false;
-				for(it1 = (*it)->neighbor.begin(); it1 != (*it)->neighbor.end(); ++it1)
-				{
-					if((*it1)->is_visit || (*it1)->is_path && !(*it)->is_out)
-					{
-						nonNeighboringViolation = true;
-						break;
-					}
-				}
+				// for(it1 = (*it)->neighbor.begin(); it1 != (*it)->neighbor.end(); ++it1)
+				// {
+				// 	if((*it1)->is_visit || (*it1)->is_path && !(*it)->is_out)
+				// 	{
+				// 		nonNeighboringViolation = true;
+				// 		break;
+				// 	}
+				// }
 				if(!nonNeighboringViolation) relax(u, (*it), weight(u, (*it)), Q);
 				else (*it)->d = 1e9;
 			}
