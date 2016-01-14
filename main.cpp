@@ -6,6 +6,7 @@
 #include <queue>
 #include <algorithm>
 #include <stack>
+#include "map"
 using namespace std;
 
 class cell
@@ -118,18 +119,62 @@ int main (int argc, char* argv[])
 	}
 
 	int tar_num = vtar.size();
+	vector<cell*> q = Q;
 	vector<vector<cell*> > vPath;
 	vector<cell*> Path, Path2;
 	vector<cell*>::iterator it, it1;
 	vector<cell*> vtargetPassThrough;
+	map<int, cell*> mtar;
+	cell* cnoterminal = new cell(-1, -1);
 
-	for(int i = 0; i < m; ++i)
+	// for(it = q.begin(); it != q.end(); ++it) (*it)->is_tar = false;
+	dijkstra(c, c[out_x-1][out_y-1], cnoterminal, q, 0);
+	for(int i = q.size()/2; i >= 0; --i) minheapify(q, i+1);
+	while(!q.empty())
+	{
+		cell* tmpc = extract_min(q);
+		if(tmpc->is_tar)
+		{
+			cell* tmpTarget = tmpc;
+			if(!dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1))
+			{
+				cout << "No path from (" << in_x << "," << in_y << ") to ";
+				cout << "(" << tmpTarget->x << "," << tmpTarget->y << ") exists.\n";
+			}
+			Path = dfs_iterative(tmpTarget);
+
+			for(it = Path.begin(); it != Path.end(); ++it)
+			{
+				(*it)->is_path = true;
+				if((*it)->is_tar) (*it)->is_tar = false;
+			}
+
+			if(!dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0))
+			{
+				cout << "No path from (" << tmpTarget->x << "," << tmpTarget->y << ") to ";
+				cout << "(" << out_x << "," << out_y << ") exists.\n";
+			}
+			Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+
+			for(it = Path2.begin(); it != Path2.end(); ++it)
+			{
+				(*it)->is_path = true;
+				if((*it)->is_tar) (*it)->is_tar = false;
+			}
+
+			if(Path2.size() >= 2)
+			Path.insert(Path.end(), ++Path2.begin(), Path2.end());
+			vPath.push_back(Path);
+		}
+	}
+
+	/*for(int i = 0; i < m; ++i)
 	{
 		for(int j = 0; j < n; ++j)
 		{
 			if(c[i][j]->is_tar)
 			{
-				cell*tmpTarget = c[i][j];
+				cell* tmpTarget = c[i][j];
 				if(!dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1))
 				{
 					cout << "No path from (" << in_x << "," << in_y << ") to ";
@@ -161,7 +206,7 @@ int main (int argc, char* argv[])
 				vPath.push_back(Path);
 			}
 		}
-	}
+	}*/
 
 	
 	// cout << endl << vtar.size() << endl;
