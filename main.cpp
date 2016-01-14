@@ -276,6 +276,7 @@ void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
 		}
 	}
 	s->d = 0;
+	s->is_path = false;
 }
 
 void relax(cell* u, cell* v, int w, vector<cell*>& Q)
@@ -460,13 +461,18 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 		{
 			if(!(*it)->is_obs && !(*it)->is_visit && !(*it)->is_path)
 			{
+				if(reset && (*it)->is_out) continue;
 				bool nonNeighboringViolation = false;
 				for(it1 = (*it)->neighbor.begin(); it1 != (*it)->neighbor.end(); ++it1)
 				{
-					if((*it1)->is_visit) nonNeighboringViolation = true;
-					break;
+					if((*it1)->is_visit || (*it1)->is_path)
+					{
+						nonNeighboringViolation = true;
+						break;
+					}
 				}
 				if(!nonNeighboringViolation) relax(u, (*it), weight(u, (*it)), Q);
+				else (*it)->d = 1e9;
 			}
 			// cout << "(" << (*it)->x << "," << (*it)->y << ")";
 		}
