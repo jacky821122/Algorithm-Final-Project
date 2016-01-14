@@ -437,7 +437,7 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 {
 	initializeSingleSource(c, source, reset);
 
-	vector<cell*>::iterator it;
+	vector<cell*>::iterator it, it1;
 	cell* u;
 	/*------------Build Min Heap------------*/
 	for(int i = Q.size()/2; i >= 0; --i) minheapify(Q, i+1);
@@ -450,7 +450,6 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 	while(!Q.empty())
 	{
 		u = extract_min(Q);
-		u->is_visit = true;
 		if(u == target) 
 		{
 			if(!u->parent.empty()) return true;
@@ -459,10 +458,19 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 		}
 		for(it = u->neighbor.begin(); it != u->neighbor.end(); ++it)
 		{
-			if((*it)->is_obs || (*it)->is_visit || (*it)->is_path) continue;
+			if(!(*it)->is_obs && !(*it)->is_visit && !(*it)->is_path)
+			{
+				bool nonNeighboringViolation = false;
+				for(it1 = (*it)->neighbor.begin(); it1 != (*it)->neighbor.end(); ++it1)
+				{
+					if((*it1)->is_visit) nonNeighboringViolation = true;
+					break;
+				}
+				if(!nonNeighboringViolation) relax(u, (*it), weight(u, (*it)), Q);
+			}
 			// cout << "(" << (*it)->x << "," << (*it)->y << ")";
-			relax(u, (*it), weight(u, (*it)), Q);
 		}
+		u->is_visit = true;
 	}
 	return false;
 	/*cout << endl;
