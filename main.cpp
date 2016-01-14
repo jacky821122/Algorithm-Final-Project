@@ -28,10 +28,7 @@ void initializeSingleSource(vector<vector<cell*> > , cell*, bool);
 void relax(cell* , cell* , int , vector<cell*>&);
 void minheapify(vector<cell*>&, int);
 void decrease_key(vector<cell*>& , cell* , int);
-void store_path(cell* , cell* , vector<vector<cell*> >&, vector<cell*>&, vector<cell*>&);
-void dfs_visit(cell* );
 bool dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
-void path_select(cell* );
 vector<cell*> dfs_iterative(cell* );
 
 int main (int argc, char* argv[])
@@ -235,32 +232,6 @@ int main (int argc, char* argv[])
 	}*/		/*--------------Input and Output Cells' Coordinate--------------------*/
 }
 
-void path_select(cell* target)
-{
-	vector<stack<cell*> > vPath;
-	cout << target->parent.size() << endl;
-	for(vector<cell*>::iterator it = target->parent.begin(); it != target->parent.end(); ++it)
-	{
-		cout << "(" << (*it)->x << "," << (*it)->y << ")" << (*it)->parent.size() << endl;
-		stack<cell*> S;
-		cell* tmpc;
-		tmpc = (*it);
-		cout << "(" << tmpc->x << "," << tmpc->y << ")";
-		/*while(!tmpc->parent.empty())
-		{
-			S.push(tmpc);
-			tmpc = tmpc->parent.back();
-			cout << "(" << tmpc->x << "," << tmpc->y << ")";
-		}
-		cout << endl;*/
-		while(!tmpc->parent.empty())
-		{
-			S.push(tmpc);
-			tmpc = tmpc->parent.back();
-		}
-	}
-}
-
 void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
 {
 	for(int i = 0; i < G.size(); ++i)
@@ -338,56 +309,6 @@ void decrease_key(vector<cell*>& A, cell* v, int key)
 	}
 	v->d = key;
 	for(int i = A.size()/2; i >= 0; --i) minheapify(A, i+1);
-}
-
-void store_path(cell* s, cell* v, vector<vector<cell*> >& vPath, vector<cell*>& Path, vector<cell*>& vtar)
-{
-	if(v == s)
-	{
-		Path.push_back(v);
-	}
-	else if(v->parent.empty() && s->is_in == true && v->is_out == true)
-	{
-		cout << "No path from (" << s->x << "," << s->y << ") to ";
-		cout << "(" << v->x << "," << v->y << ") exists.\n";
-		Path.clear();
-		return void();
-	}
-	else if(v->parent.empty())
-	{
-		Path.clear();
-		return void();
-	}
-	else
-	{
-		for(vector<cell*>::iterator it = v->parent.begin(); it != v->parent.end(); ++it)
-		{
-			// cout << "(" << (*it)->x << "," << (*it)->y << ")" << " ";
-			store_path(s, (*it), vPath, Path, vtar);
-			// cout << "(" << v->x << "," << v->y << ")" << " ";
-			
-			// if(v->is_tar == true)
-			// {
-				// for(vector<cell*>::iterator it2 = vtar.begin(); it2 != vtar.end(); ++it2)
-				// {
-					// cout << (*it2)->x << " " << (*it2)->y << endl;
-					// if((*it2) == v)
-					// {
-						// vtar.erase(it2);
-						// break;
-					// }
-				// }
-			// }
-			Path.push_back(v);
-			if(v->is_out == true)
-			{
-				vPath.push_back(Path);
-				Path.clear();
-				return void();
-				// cout << endl;
-			}
-		}
-	}
 }
 
 vector<cell*> dfs_iterative(cell* v)
