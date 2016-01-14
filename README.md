@@ -1,8 +1,8 @@
 # Algorithm-Final-Project
-###目前目標：
-#####1.從終點開始找離終點最近的Target,把這些Target用離終點最近的順序存進Queue裡
-#####2.再用指定目標的作法(master)將Target一一擊破!
-***`while(queue is not empty)`***
-
-***`if(queue.front is target)...`***
-######p.s. 不知為何nagetive的路徑會瞬間移動
+###分支特色：
+#####1.完成Non-Neighboring Rule（但用is_visit判斷,效果不彰）
+#####2.當目標為target時,在走到目標前不會經過終點
+###已知Bug：
+#####1.若走過的路徑橫截整張圖，將會形成楚河漢界
+![Bug1](/bug1.png)
+#####2.這個版本常常走不終點
