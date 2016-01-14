@@ -147,6 +147,15 @@ int main (int argc, char* argv[])
 				{
 					cout << "No path from (" << tmpTarget->x << "," << tmpTarget->y << ") to ";
 					cout << "(" << out_x << "," << out_y << ") exists.\n";
+					// for(int j = 14; j >= 0; --j)
+					// {
+					// 	{
+					// 		for(int i = 0; i < m; ++i)
+					// 		cout << c[i][j]->d << " ";
+					// 	}
+					// 	cout << endl;	
+					// }
+					// cout << endl;
 				}
 				Path2 = dfs_iterative(c[out_x-1][out_y-1]);
 
@@ -284,7 +293,7 @@ void relax(cell* u, cell* v, int w, vector<cell*>& Q)
 	if(v->d >= u->d + w)
 	{
 		v->d = u->d + w;
-		v->parent.clear();
+		// v->parent.clear();
 		v->parent.push_back(u);
 		decrease_key(Q, v, v->d);
 	}
@@ -461,11 +470,11 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 		{
 			if(!(*it)->is_obs && !(*it)->is_visit && !(*it)->is_path)
 			{
-				if(reset && (*it)->is_out) continue;
+				// if(reset && (*it)->is_out) continue;
 				bool nonNeighboringViolation = false;
 				for(it1 = (*it)->neighbor.begin(); it1 != (*it)->neighbor.end(); ++it1)
 				{
-					if((*it1)->is_visit || (*it1)->is_path)
+					if((*it1)->is_visit || (*it1)->is_path && !(*it)->is_out)
 					{
 						nonNeighboringViolation = true;
 						break;
@@ -476,6 +485,7 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 			}
 			// cout << "(" << (*it)->x << "," << (*it)->y << ")";
 		}
+		// cout << "(" << u->x << "," << u->y << ")" << ' ' << u->d << endl;
 		u->is_visit = true;
 	}
 	return false;
