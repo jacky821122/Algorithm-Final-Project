@@ -52,69 +52,69 @@ int main (int argc, char* argv[])
 	std::vector<cell*> vcInOut;
 	std::vector<cell*> vtar, vobs;
 
-	while(getline(fin, line))
+	fin >> m;
+	fin >> n;
+	for (int i = 1; i < m+1; ++i)
 	{
-		istringstream token(line);
-		if (lineCount == 1) // Deal With M. N. Cin.x Cout.y
+		vector<cell*> vcCol;
+		for (int j = 1; j < n+1; ++j)
 		{
-			token >> m;
-			token >> n;
-			for (int i = 1; i < m+1; ++i)
+			cell *tmpc = new cell(i, j);
+			vcCol.push_back(tmpc);
+			Q.push_back(tmpc);
+
+			/*----------Adding All Cells' neighbor-----------*/
+			if(i - 1 != 0)
 			{
-				vector<cell*> vcCol;
-				for (int j = 1; j < n+1; ++j)
-				{
-					cell *tmpc = new cell(i, j);
-					vcCol.push_back(tmpc);
-					Q.push_back(tmpc);
-
-					/*----------Adding All Cells' neighbor-----------*/
-					if(i - 1 != 0)
-					{
-						tmpc->neighbor.push_back(c[i - 2][j - 1]);
-						c[i - 2][j - 1]->neighbor.push_back(tmpc);
-					}
-					if(j - 1 != 0)
-					{
-						std::vector<cell*>::reverse_iterator rit = vcCol.rbegin();
-						tmpc->neighbor.push_back(*(++rit));
-						(*rit)->neighbor.push_back(tmpc);
-					}
-					/*----------Adding All Cells' neighbor-----------*/
-				}
-				c.push_back(vcCol);
+				tmpc->neighbor.push_back(c[i - 2][j - 1]);
+				c[i - 2][j - 1]->neighbor.push_back(tmpc);
 			}
-			/*----------Cinput-----------*/
-			token >> in_x;
-			token >> in_y;
-			c[in_x - 1][in_y - 1]->is_in = true;
-			vcInOut.push_back(c[in_x - 1][in_y - 1]);
-			/*----------Coutput-----------*/
-			token >> out_x;
-			token >> out_y;
-			c[out_x - 1][out_y - 1]->is_out = true;
-			vcInOut.push_back(c[out_x - 1][out_y - 1]);
-		}
-		else // Deal With Targets and Obstacles
-		{
-			token >> lineCellNum;
-
-			for (int i = 0; i < lineCellNum; ++i)
+			if(j - 1 != 0)
 			{
-				int tmpx, tmpy;
-				token >> tmpx;
-				token >> tmpy;
-				if(lineCount == 2) c[tmpx - 1][tmpy - 1]->is_tar = true;
-				else c[tmpx - 1][tmpy - 1]->is_obs = true;
-
-				/*------------Not Sure------------*/
-				if(lineCount == 2) vtar.push_back(c[tmpx - 1][tmpy - 1]);
-				else vobs.push_back(c[tmpx - 1][tmpy - 1]);
+				std::vector<cell*>::reverse_iterator rit = vcCol.rbegin();
+				tmpc->neighbor.push_back(*(++rit));
+				(*rit)->neighbor.push_back(tmpc);
 			}
+			/*----------Adding All Cells' neighbor-----------*/
 		}
-		lineCount++;
+		c.push_back(vcCol);
+	}
+	/*----------Cinput-----------*/
+	fin >> in_x;
+	fin >> in_y;
+	c[in_x - 1][in_y - 1]->is_in = true;
+	vcInOut.push_back(c[in_x - 1][in_y - 1]);
+	/*----------Coutput-----------*/
+	fin >> out_x;
+	fin >> out_y;
+	c[out_x - 1][out_y - 1]->is_out = true;
+	vcInOut.push_back(c[out_x - 1][out_y - 1]);
+	
+	fin >> lineCellNum;
+	for (int i = 0; i < lineCellNum; ++i)
+	{
+		int tmpx, tmpy;
+		fin >> tmpx;
+		fin >> tmpy;
+		c[tmpx - 1][tmpy - 1]->is_tar = true;
+
+		/*------------Not Sure------------*/
+		vtar.push_back(c[tmpx - 1][tmpy - 1]);
 	}
 
+	fin >> lineCellNum;
+	for (int i = 0; i < lineCellNum; ++i)
+	{
+		int tmpx, tmpy;
+		fin >> tmpx;
+		fin >> tmpy;
+		
+		c[tmpx - 1][tmpy - 1]->is_obs = true;
+
+		/*------------Not Sure------------*/
+		vobs.push_back(c[tmpx - 1][tmpy - 1]);		
+	}
+	
 	int tar_num = vtar.size();
 	vector<vector<cell*> > vPath;
 	vector<cell*> Path, Path2;
