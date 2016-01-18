@@ -29,6 +29,7 @@ void relax(cell* , cell* , int , vector<cell*>&);
 void minheapify(vector<cell*>&, int);
 void decrease_key(vector<cell*>& , cell* , int);
 bool dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
+void insertion(vector<cell*>&, int, int);
 vector<cell*> dfs_iterative(cell* );
 
 int main (int argc, char* argv[])
@@ -311,28 +312,84 @@ void decrease_key(vector<cell*>& A, cell* v, int key)
 	for(int i = A.size()/2; i >= 0; --i) minheapify(A, i+1);
 }
 
+bool nonNeighboringViolation(cell* child, cell* parent)
+{
+	vector<cell*>::iterator it1;
+	for(it1 = child->neighbor.begin(); it1 != child->neighbor.end(); ++it1)
+	{
+		if((*it1)->is_path && (*it1) != parent && (*it1)->dfsParent != NULL)
+		{
+			// cout << "FUCK (" << (*it1)->x << "," << (*it1)->y << ")" <<' ';
+			return true;
+		}
+	}
+	return false;
+}
+
+void insertion(vector<cell*> &v, int p, int r)
+{
+	for (int i = p + 1; i <= r; ++i)
+	{
+		cell* key = new cell(v[i]->x, v[i]->y);
+		key->d = v[i]->d;
+		// ELEMENT key = ELEMENT(v[i].get_id(), v[i].get_value());
+		int j = i - 1;
+		while (j >= p && v[j]->d > key->d)
+		{
+			v[j + 1] = v[j];
+			j -= 1;
+		}
+		v[j + 1] = key;
+	}
+}
+
 vector<cell*> dfs_iterative(cell* v)
 {
-	int targetPassThrough = 0;
+	int targetPassThrough = 0, count = 0;
+	bool violation = false;
 	vector<cell*> path;
+	vector<cell*>::iterator it, it1;
 	stack<cell*> S;
 	cell* u;
 	S.push(v);
 	v->dfsParent = NULL;
+	v->is_path = true;
 	while(!S.empty())
 	{
 		v = S.top();
 		S.pop();
 		if(!v->parent.empty())
 		{
-			for(vector<cell*>::iterator it = v->parent.begin(); it != v->parent.end(); ++it)
+			for(it = v->parent.begin(); it != v->parent.end(); ++it)
 			{
-				S.push((*it));
-				(*it)->dfsParent = v;
+				cell *breakpoint = new cell(1e9, 1e9);
+				cell *tmpchild = *it;
+				cell* tmpNeighbor = new cell(1, 1);
+				tmpNeighbor->d = 1e9;
+				if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
+				{
+					for(it1 = v->neighbor.begin(); it1 != v->neighbor.end(); ++it1)
+					{
+						if(!(*it1)->is_path && (*it1) != tmpchild && (*it1)->d <= tmpNeighbor->d && !(*it1)->is_obs)
+						{
+							tmpNeighbor = *it1;
+						}
+					}
+					tmpchild = tmpNeighbor;
+					if(tmpNeighbor->d == 1e9)
+					{
+						cout << "No Path.\n";
+						return path;
+					} 
+				}
+				S.push(tmpchild);
+				tmpchild->dfsParent = v;
+				tmpchild->is_path = true;
 			}
 		}
 		else
 		{
+			// cout << "v : (" << v->x << "," << v->y << ") ";
 			int tmpTPT = 0;
 			std::vector<cell*> tmpPath;
 			tmpPath.push_back(v);
