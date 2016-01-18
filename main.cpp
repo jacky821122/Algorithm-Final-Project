@@ -46,7 +46,7 @@ int main (int argc, char* argv[])
 	} 
 
 	/*----------Map Information-----------*/
-	vector<vector<cell*> > c;
+	vector<vector<cell*> > c, ctest;
 
 	std::vector<cell*> Q;
 	std::vector<cell*> vcInOut;
@@ -135,27 +135,44 @@ int main (int argc, char* argv[])
 				}
 				Path = dfs_iterative(tmpTarget);
 
-				for(it = Path.begin(); it != Path.end(); ++it)
-				{
-					(*it)->is_path = true;
-					if((*it)->is_tar) (*it)->is_tar = false;
-				}
-
 				if(!dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0))
 				{
 					cout << "No path from (" << tmpTarget->x << "," << tmpTarget->y << ") to ";
 					cout << "(" << out_x << "," << out_y << ") exists.\n";
 				}
 				Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+				
+				if(Path2.empty())
+				{
+					vector<cell*> vtartmp;
+					for(it = Path.begin(); it != Path.end(); ++it)
+					{
+						(*it)->is_path = false;
+						if((*it)->is_tar && (*it) != tmpTarget)
+						{
+							vtartmp.push_back((*it));
+							(*it)->is_tar = false;
+						}
+					}
+					Path.clear();
+					dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1);
+					Path = dfs_iterative(tmpTarget);
+					dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0);
+					Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+					for(vector<cell*>::iterator it1 = vtartmp.begin(); it1 != vtartmp.end(); ++it1)
+					{
+						c[(*it1)->x-1][(*it1)->y-1]->is_tar = true;
+					}
+				}
+				if(Path2.size() >= 2)
+				Path.insert(Path.end(), ++Path2.begin(), Path2.end());
 
-				for(it = Path2.begin(); it != Path2.end(); ++it)
+				for(it = Path.begin(); it != Path.end(); ++it)
 				{
 					(*it)->is_path = true;
 					if((*it)->is_tar) (*it)->is_tar = false;
 				}
 
-				if(Path2.size() >= 2)
-				Path.insert(Path.end(), ++Path2.begin(), Path2.end());
 				vPath.push_back(Path);
 			}
 		}
@@ -264,7 +281,7 @@ void relax(cell* u, cell* v, int w, vector<cell*>& Q)
 
 int weight(cell* u, cell* v)
 {
-	return (u->is_tar == true || v->is_tar == true)? 1 : 50;
+	return (u->is_tar == true || v->is_tar == true)? 1 : 3;
 }
 
 void minheapify(vector<cell*>& A, int i)
