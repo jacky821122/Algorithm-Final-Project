@@ -31,6 +31,7 @@ void decrease_key(vector<cell*>& , cell* , int);
 bool dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
 void insertion(vector<cell*>&, int, int);
 vector<cell*> dfs_iterative(cell* );
+bool dd(vector<vector<cell*> >, cell*, cell*, cell*, vector<cell*>, vector<cell*>&, vector<cell*>&);
 
 int main (int argc, char* argv[])
 {
@@ -115,106 +116,111 @@ int main (int argc, char* argv[])
 		vobs.push_back(c[tmpx - 1][tmpy - 1]);		
 	}
 	
-	int tar_num = vtar.size();
+	int tar_num = vtar.size(), i = 0;
 	vector<vector<cell*> > vPath;
 	vector<cell*> Path, Path2;
 	vector<cell*>::iterator it, it1;
 	vector<cell*> vtargetPassThrough;
 
-	for(int i = 0; i < m; ++i)
+	while(tar_num != 0)
 	{
-		for(int j = 0; j < n; ++j)
+		for(it = vtar.begin(); it != vtar.end(); ++it)
 		{
-			if(c[i][j]->is_tar)
+			if((*it)->is_tar)
 			{
-				cell*tmpTarget = c[i][j];
-				if(!dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1))
-				{
-					cout << "No path from (" << in_x << "," << in_y << ") to ";
-					cout << "(" << tmpTarget->x << "," << tmpTarget->y << ") exists.\n";
-				}
-				Path = dfs_iterative(tmpTarget);
-
-				if(!dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0))
-				{
-					cout << "No path from (" << tmpTarget->x << "," << tmpTarget->y << ") to ";
-					cout << "(" << out_x << "," << out_y << ") exists.\n";
-				}
-				Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+				bool delta = false;
+				cell* tmpTarget = *it;
+				delta = dd(c, c[in_x-1][in_y-1], tmpTarget, c[out_x-1][out_y-1], Q, Path, Path2);
+				vector<cell*> tmpPath1 = Path, tmpPath2 = Path2;
+				vector<cell*> vtartmp;
 				
-
-				if(Path2.empty())
+				if(!delta)
 				{
-					cout << "FUCK1\n";
-					vector<cell*> vtartmp, tmpPath;
-					for(it = Path.begin(); it != Path.end(); ++it)
+					for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1)
 					{
-						(*it)->is_path = false;
-						if((*it)->is_tar && (*it) != tmpTarget)
+						(*it1)->is_path = false;
+						if((*it1)->is_tar && (*it1) != tmpTarget)
 						{
-							vtartmp.push_back((*it));
-							// (*it)->is_tar = false;
+							vtartmp.push_back((*it1));
+							(*it1)->is_tar = false;
 						}
 					}
-					int i = 0;
-					tmpPath = Path;
-					for(it = vtartmp.begin(); it != vtartmp.end(); ++it)
+					tmpPath1.clear();
+					delta = dd(c, c[in_x-1][in_y-1], tmpTarget, c[out_x-1][out_y-1], Q, tmpPath1, Path2);
+					if(!delta)
 					{
-						(*it)->is_tar = false;
+						for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1) (*it1)->is_path = false;
+						tmpPath1.clear();
+						delta = dd(c, c[out_x-1][out_y-1], tmpTarget, c[in_x-1][in_y-1], Q, tmpPath1, Path2);
 					}
-					Path.clear();
-					dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1);
-					Path = dfs_iterative(tmpTarget);
-					dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0);
-					Path2 = dfs_iterative(c[out_x-1][out_y-1]);
-					for(vector<cell*>::iterator it1 = vtartmp.begin(); it1 != vtartmp.end(); ++it1)
+					for(it1 = vtartmp.begin(); it1 != vtartmp.end(); ++it1)
 					{
-						c[(*it1)->x-1][(*it1)->y-1]->is_tar = true;
+						(*it1)->is_tar = true;
 					}
-
-					while(Path2.empty() && i < vtartmp.size() && vtartmp[i] != tmpTarget)
-					{
-						vtartmp[i]->is_tar = false;
-						for(it = tmpPath.begin(); it != tmpPath.end(); ++it) (*it)->is_path = false;
-						tmpPath.clear();
-						dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1);
-						tmpPath = dfs_iterative(tmpTarget);
-						dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0);
-						Path2 = dfs_iterative(c[out_x-1][out_y-1]);
-						vtartmp[i]->is_tar = true;
-						Path = tmpPath;
-						cout << "FUCK2\n";
-						++i;
-					}
-
-					if(Path2.empty())
-					{
-						for(it = Path.begin(); it != Path.end(); ++it)
-						{
-							(*it)->is_path = false;
-						}
-						Path.clear();
-						dijkstra(c, c[out_x-1][out_y-1], tmpTarget, Q, 1);
-						Path = dfs_iterative(tmpTarget);
-						dijkstra(c, tmpTarget, c[in_x-1][in_y-1], Q, 0);
-						Path2 = dfs_iterative(c[in_x-1][in_y-1]);
-					}
-
 				}
-				if(Path2.size() >= 2)
-				Path.insert(Path.end(), ++Path2.begin(), Path2.end());
 
-				for(it = Path.begin(); it != Path.end(); ++it)
+				if(delta) Path = tmpPath1;
+				else
 				{
-					(*it)->is_path = true;
-					if((*it)->is_tar) (*it)->is_tar = false;
+					tmpPath1 = Path;
+					for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1)
+					{
+						if((*it1)->is_path) (*it1)->is_path = false;
+					}
+					delta = dd(c, c[out_x-1][out_y-1], tmpTarget, c[in_x-1][in_y-1], Q, tmpPath1, Path2);
+				}
+				
+				if(delta) Path = tmpPath1;
+				else
+				{
+					int i = 0;
+					tmpPath1 = Path;
+					for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1)
+					{
+						if((*it1)->is_path) (*it1)->is_path = false;
+					}
+					while(!delta && i < vtartmp.size() && vtartmp[i] != tmpTarget)
+					{
+						cout << "FUCK2\n";
+						vtartmp[i]->is_tar = false;
+						for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1) (*it1)->is_path = false;
+						tmpPath1.clear();
+						delta = dd(c, c[in_x-1][in_y-1], tmpTarget, c[out_x-1][out_y-1], Q, tmpPath1, Path2);
+						if(!delta)
+						{
+							for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1) (*it1)->is_path = false;
+							tmpPath1.clear();
+							delta=dd(c, c[out_x-1][out_y-1], tmpTarget, c[in_x-1][in_y-1], Q, tmpPath1, Path2);
+						}
+						vtartmp[i]->is_tar = true;
+						++i;						
+					}
+				}
+
+				if(delta) Path = tmpPath1;
+				else
+				{
+					Path = tmpPath1;
+					cout << "OH FUCK\n";
+				}
+
+				if(Path2.size() >= 2)
+					Path.insert(Path.end(), ++Path2.begin(), Path2.end());
+				
+				for(it1 = Path.begin(); it1 != Path.end(); ++it1)
+				{
+					(*it1)->is_path = true;
+					if((*it1)->is_tar)
+					{
+						(*it1)->is_tar = false;
+						--tar_num;
+					}
 				}
 
 				vPath.push_back(Path);
 			}
 		}
 	}
-
 	
 	// cout << endl << vtar.size() << endl;
 
@@ -416,7 +422,6 @@ vector<cell*> dfs_iterative(cell* v)
 		{
 			for(it = v->parent.begin(); it != v->parent.end(); ++it)
 			{
-				cell *breakpoint = new cell(1e9, 1e9);
 				cell *tmpchild = *it;
 				cell* tmpNeighbor = new cell(1, 1);
 				tmpNeighbor->d = 1e9;
@@ -432,9 +437,8 @@ vector<cell*> dfs_iterative(cell* v)
 					tmpchild = tmpNeighbor;
 					if(tmpNeighbor->d == 1e9)
 					{
-						cout << "No Path.\n";
 						return path;
-					} 
+					}
 				}
 				S.push(tmpchild);
 				tmpchild->dfsParent = v;
@@ -501,6 +505,7 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 		}
 	}
 	return false;
+	// return true;
 	/*cout << endl;
 	for(int i = 0; i < c.size(); ++i)
 	{
@@ -510,4 +515,22 @@ bool dijkstra(vector<vector<cell*> > c, cell* source, cell* target, vector<cell*
 			cout << c[i][j]->d << endl;
 		}
 	}*/
+}
+
+bool dd(vector<vector<cell*> > c, cell* start, cell* temp, cell* end, vector<cell*> Q, vector<cell*>& path1, vector<cell*>& path2)
+{
+	if(!dijkstra(c, start, temp, Q, 1))
+	{
+		// cout << "No path from (" << start->x << "," << start->y << ") to ";
+		// cout << "(" << temp->x << "," << temp->y << ") exists.\n";
+	}
+	path1 = dfs_iterative(temp);
+	if(!dijkstra(c, temp, end, Q, 0))
+	{
+		// cout << "No path from (" << temp->x << "," << temp->y << ") to ";
+		// cout << "(" << end->x << "," << end->y << ") exists.\n";		
+	}
+	path2 = dfs_iterative(end);
+	if(path2.empty()) return false;
+	return true;
 }
