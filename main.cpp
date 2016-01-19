@@ -142,17 +142,25 @@ int main (int argc, char* argv[])
 				}
 				Path2 = dfs_iterative(c[out_x-1][out_y-1]);
 				
+
 				if(Path2.empty())
 				{
-					vector<cell*> vtartmp;
+					cout << "FUCK1\n";
+					vector<cell*> vtartmp, tmpPath;
 					for(it = Path.begin(); it != Path.end(); ++it)
 					{
 						(*it)->is_path = false;
 						if((*it)->is_tar && (*it) != tmpTarget)
 						{
 							vtartmp.push_back((*it));
-							(*it)->is_tar = false;
+							// (*it)->is_tar = false;
 						}
+					}
+					int i = 0;
+					tmpPath = Path;
+					for(it = vtartmp.begin(); it != vtartmp.end(); ++it)
+					{
+						(*it)->is_tar = false;
 					}
 					Path.clear();
 					dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1);
@@ -163,6 +171,35 @@ int main (int argc, char* argv[])
 					{
 						c[(*it1)->x-1][(*it1)->y-1]->is_tar = true;
 					}
+
+					while(Path2.empty() && i < vtartmp.size() && vtartmp[i] != tmpTarget)
+					{
+						vtartmp[i]->is_tar = false;
+						for(it = tmpPath.begin(); it != tmpPath.end(); ++it) (*it)->is_path = false;
+						tmpPath.clear();
+						dijkstra(c, c[in_x-1][in_y-1], tmpTarget, Q, 1);
+						tmpPath = dfs_iterative(tmpTarget);
+						dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0);
+						Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+						vtartmp[i]->is_tar = true;
+						Path = tmpPath;
+						cout << "FUCK2\n";
+						++i;
+					}
+
+					if(Path2.empty())
+					{
+						for(it = Path.begin(); it != Path.end(); ++it)
+						{
+							(*it)->is_path = false;
+						}
+						Path.clear();
+						dijkstra(c, c[out_x-1][out_y-1], tmpTarget, Q, 1);
+						Path = dfs_iterative(tmpTarget);
+						dijkstra(c, tmpTarget, c[in_x-1][in_y-1], Q, 0);
+						Path2 = dfs_iterative(c[in_x-1][in_y-1]);
+					}
+
 				}
 				if(Path2.size() >= 2)
 				Path.insert(Path.end(), ++Path2.begin(), Path2.end());
@@ -424,6 +461,10 @@ vector<cell*> dfs_iterative(cell* v)
 			if(tmpTPT >= targetPassThrough) path = tmpPath;
 			// cout << endl;
 		}
+	}
+	if(path.size() == 1)
+	{
+		path.clear();
 	}
 	return path;
 }
