@@ -97,10 +97,11 @@ int main (int argc, char* argv[])
 		int tmpx, tmpy;
 		fin >> tmpx;
 		fin >> tmpy;
+		if((tmpx == in_x && tmpy == in_y) || (tmpx == out_x && tmpy == out_y)) continue;
 		c[tmpx - 1][tmpy - 1]->is_tar = true;
 
 		/*------------Not Sure------------*/
-		vtar.push_back(c[tmpx - 1][tmpy - 1]);
+		vtar.push_back(c[tmpx - 1][tmpy - 1]);			
 	}
 
 	fin >> lineCellNum;
