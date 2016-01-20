@@ -628,7 +628,6 @@ vector<cell*> dfs_special(vector<vector<cell*> > c, cell* v, cell* target)
 		v = S.top();
 		S.pop();
 		v->is_visit = true;
-		bool corner = false;
 		// cout << " v : (" << v->x << "," << v->y << ")\n";
 		if(v != target)
 		{
