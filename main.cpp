@@ -23,14 +23,17 @@ public:
 
 int m, n, in_x, in_y, out_x, out_y;
 int weight(cell* , cell*);
-cell* extract_min(vector<cell*>& );
+cell* extract_min(vector<cell*>&);
 void initializeSingleSource(vector<vector<cell*> > , cell*, bool);
 void relax(cell* , cell* , int , vector<cell*>&);
 void minheapify(vector<cell*>&, int);
 void decrease_key(vector<cell*>& , cell* , int);
 bool dijkstra(vector<vector<cell*> > c, cell* source, cell*, vector<cell*> Q, bool);
 void insertion(vector<cell*>&, int, int);
-vector<cell*> dfs_iterative(cell* );
+vector<cell*> dfs_iterative(cell*);
+vector<cell*> dfs_special(vector<vector<cell*> > c, cell*, cell*);
+bool isborder(vector<vector<cell*> > c, cell* v);
+bool iscorner(vector<vector<cell*> > c, cell* v);
 bool dd(vector<vector<cell*> >, cell*, cell*, cell*, vector<cell*>, vector<cell*>&, vector<cell*>&);
 
 int main (int argc, char* argv[])
@@ -48,6 +51,7 @@ int main (int argc, char* argv[])
 
 	/*----------Map Information-----------*/
 	vector<vector<cell*> > c, ctest;
+	vector<cell*>::iterator it, it1;
 
 	std::vector<cell*> Q;
 	std::vector<cell*> vcInOut;
@@ -120,10 +124,9 @@ int main (int argc, char* argv[])
 	int tar_num = vtar.size(), i = 0;
 	vector<vector<cell*> > vPath;
 	vector<cell*> Path, Path2;
-	vector<cell*>::iterator it, it1;
 	vector<cell*> vtargetPassThrough;
 
-	while(tar_num != 0)
+	while(tar_num > 0)
 	{
 		for(it = vtar.begin(); it != vtar.end(); ++it)
 		{
@@ -132,7 +135,7 @@ int main (int argc, char* argv[])
 				bool delta = false;
 				cell* tmpTarget = *it;
 				delta = dd(c, c[in_x-1][in_y-1], tmpTarget, c[out_x-1][out_y-1], Q, Path, Path2);
-				vector<cell*> tmpPath1 = Path, tmpPath2 = Path2;
+				vector<cell*> tmpPath1 = Path;
 				vector<cell*> vtartmp;
 				
 				if(!delta)
@@ -147,13 +150,17 @@ int main (int argc, char* argv[])
 						}
 					}
 					tmpPath1.clear();
+					
 					delta = dd(c, c[in_x-1][in_y-1], tmpTarget, c[out_x-1][out_y-1], Q, tmpPath1, Path2);
+					
 					if(!delta)
 					{
 						for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1) (*it1)->is_path = false;
 						tmpPath1.clear();
+						
 						delta = dd(c, c[out_x-1][out_y-1], tmpTarget, c[in_x-1][in_y-1], Q, tmpPath1, Path2);
 					}
+					
 					for(it1 = vtartmp.begin(); it1 != vtartmp.end(); ++it1)
 					{
 						(*it1)->is_tar = true;
@@ -168,6 +175,7 @@ int main (int argc, char* argv[])
 					{
 						if((*it1)->is_path) (*it1)->is_path = false;
 					}
+					
 					delta = dd(c, c[out_x-1][out_y-1], tmpTarget, c[in_x-1][in_y-1], Q, tmpPath1, Path2);
 				}
 				
@@ -180,19 +188,25 @@ int main (int argc, char* argv[])
 					{
 						if((*it1)->is_path) (*it1)->is_path = false;
 					}
+				
 					while(!delta && i < vtartmp.size() && vtartmp[i] != tmpTarget)
 					{
-						cout << "FUCK2\n";
+						// cout << "FUCK2\n";
 						vtartmp[i]->is_tar = false;
+						
 						for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1) (*it1)->is_path = false;
 						tmpPath1.clear();
+						
 						delta = dd(c, c[in_x-1][in_y-1], tmpTarget, c[out_x-1][out_y-1], Q, tmpPath1, Path2);
+						
 						if(!delta)
 						{
 							for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1) (*it1)->is_path = false;
 							tmpPath1.clear();
+						
 							delta=dd(c, c[out_x-1][out_y-1], tmpTarget, c[in_x-1][in_y-1], Q, tmpPath1, Path2);
 						}
+						
 						vtartmp[i]->is_tar = true;
 						++i;						
 					}
@@ -201,6 +215,48 @@ int main (int argc, char* argv[])
 				if(delta) Path = tmpPath1;
 				else
 				{
+					for(int i = 0; i < m; ++i)
+					{
+						for(int j = 0; j < n; ++j)
+						{
+							c[i][j]->is_path = false;
+						}
+					}
+					tmpPath1 = dfs_special(c, c[in_x-1][in_y-1], tmpTarget);
+					// for(it1 = tmpPath1.begin(); it1 != tmpPath1.end(); ++it1)
+					// {
+					// 	cout << "(" << (*it1)->x << "," << (*it1)->y << ")";
+					// }
+					// cout << endl;
+					tmpTarget->is_path = false;
+					dijkstra(c, c[out_x-1][out_y-1], tmpTarget, Q, 0);
+					// cout << tmpTarget->d << " " << c[out_x-1][out_y-1]->d << endl;
+					Path2 = dfs_iterative(tmpTarget);
+					if(Path2.empty())
+					{
+						dijkstra(c, tmpTarget, c[out_x-1][out_y-1], Q, 0);
+						Path2 = dfs_iterative(c[out_x-1][out_y-1]);
+					// for(it1 = Path2.begin(); it1 != Path2.end(); ++it1)
+					// {
+					// 	cout << "(" << (*it1)->x << "," << (*it1)->y << ")";
+					// }
+					// cout << endl;
+						
+						if(Path2.empty())
+						{
+							Path2 = dfs_special(c, tmpTarget, c[out_x-1][out_y-1]);
+							if(Path2.empty()) delta = false;
+							else delta = true;
+						}
+						else delta = true;
+					}
+					else delta = true;
+				}
+
+				if(delta) Path = tmpPath1;
+				else
+				{
+					--tar_num;
 					Path = tmpPath1;
 					cout << "OH FUCK\n";
 				}
@@ -223,23 +279,6 @@ int main (int argc, char* argv[])
 		}
 	}
 	
-	// cout << endl << vtar.size() << endl;
-
-	/*for(int i = 0; i < Path.size(); ++i)
-	{
-		cout <<  "(" << Path[i]->x << "," << Path[i]->y << ")";
-	}
-	cout << endl;*/
-
-	/*for(int i = 0; i < vPath.size(); ++i)
-	{
-		for(int j = 0; j < vPath[i].size(); ++j)
-		{
-			cout << "(" << vPath[i][j]->x << "," << vPath[i][j]->y << ")";
-		}
-		cout << endl;
-	}*/
-
 	ofstream fout(argv[2]);
 	fout << vPath.size() << endl;
 	for(int i = 0; i < vPath.size(); ++i)
@@ -251,47 +290,15 @@ int main (int argc, char* argv[])
 		}
 		fout << endl;
 	}
-
-	// store_path(c[in_x - 1][in_y - 1], c[out_x - 1][out_y - 1], vPath);
-	// store_path(c[in_x - 1][in_y - 1], tmp, vPath);
-
-	// dfs_iterative(c[out_x - 1][out_y - 1]);
-
 	
-	/*cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
-	cout << "size : " << Q.size() << endl;
-	decrease_key(Q, c[out_x - 1][out_y - 1], 10);
-	cout << extract_min(Q)->d << " (" << Q.front()->x << "," << Q.front()->y << ")" << endl;
-	cout << "size : " << Q.size() << endl;*/		/*-----------Testing Min_Queue-----------------*/
+	// for(int i = 0; i < m; ++i)
+	// {
+	// 	for(int j = 0; j < n; ++j)
+	// 	{
+	// 		cout << c[i][j]->x << "," << c[i][j]->y << " " << c[i][j]->is_path << endl;
+	// 	}
+	// }
 
-	/*for(int i = 0; i < c.size(); ++i)
-	{
-		for(int j = 0 ; j < c[i].size(); ++j)
-		{
-			cout << "C (" << c[i][j]->x << "," << c[i][j]->y << ") : ";
-			cout << c[i][j]->neighbor.size() << endl;
-		}
-	}*/		/*--------------All Cells' Coordinate and Their #(neighbor)--------------------*/
-
-	/*for(std::vector<cell*>::iterator it = vobs.begin(); it != vobs.end(); ++it)
-	{		
-		cout << "C (" << (*it)->x << "," << (*it)->y << ")\n"; 
-		cout << "Target  ? " << (*it)->is_tar << endl;
-		cout << "Obstacle? " << (*it)->is_obs << endl;
-	}		
-	for(std::vector<cell*>::iterator it = vtar.begin(); it != vtar.end(); ++it)
-	{		
-		cout << "C (" << (*it)->x << "," << (*it)->y << ")\n"; 
-		cout << "Target  ? " << (*it)->is_tar << endl;
-		cout << "Obstacle? " << (*it)->is_obs << endl;
-	}*/		/*--------------All Obs&Tar Cells' Coordinate and Their Information--------------------*/
-	
-	/*for(std::vector<cell*>::iterator it = vcInOut.begin(); it != vcInOut.end(); ++it)
-	{
-		cout << "C   (" << (*it)->x << "," << (*it)->y << ")\n"; 
-		cout << "Input ? " << (*it)->is_in << endl;
-		cout << "Output? " << (*it)->is_out << endl;
-	}*/		/*--------------Input and Output Cells' Coordinate--------------------*/
 }
 
 void initializeSingleSource(vector<vector<cell*> > G, cell* s, bool reset)
@@ -423,7 +430,7 @@ vector<cell*> dfs_iterative(cell* v)
 		{
 			for(it = v->parent.begin(); it != v->parent.end(); ++it)
 			{
-				cell *tmpchild = *it;
+				cell *tmpchild = *it, *tmpchild1, *tmpchild2;
 				cell* tmpNeighbor = new cell(1, 1);
 				tmpNeighbor->d = 1e9;
 				if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
@@ -435,9 +442,39 @@ vector<cell*> dfs_iterative(cell* v)
 							tmpNeighbor = *it1;
 						}
 					}
+					tmpchild1 = tmpchild;
 					tmpchild = tmpNeighbor;
+					if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
+					{
+						// cout << "HI\n";
+						for(it1 = v->neighbor.begin(); it1 != v->neighbor.end(); ++it1)
+						{
+							if(!(*it1)->is_path && (*it1) != tmpchild && (*it1)->d <= tmpNeighbor->d && !(*it1)->is_obs && (*it) != tmpchild1)
+							{
+								tmpNeighbor = *it1;
+							}
+						}
+						tmpchild2 = tmpchild;
+						tmpchild = tmpNeighbor;
+						if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
+						{
+							for(it1 = v->neighbor.begin(); it1 != v->neighbor.end(); ++it1)
+							{
+								if(!(*it1)->is_path && (*it1) != tmpchild && (*it1)->d <= tmpNeighbor->d && !(*it1)->is_obs && (*it1) != tmpchild1 && (*it1) != tmpchild2)
+								{
+									tmpNeighbor = *it1;
+								}
+							}
+							tmpchild = tmpNeighbor;
+						}					
+					}
 					if(tmpNeighbor->d == 1e9)
 					{
+						// while(v->dfsParent != NULL)
+						// {
+							// cout << "(" << v->x << "," << v->y << ")";
+							// v = v->dfsParent;
+						// }
 						return path;
 					}
 				}
@@ -534,4 +571,194 @@ bool dd(vector<vector<cell*> > c, cell* start, cell* temp, cell* end, vector<cel
 	path2 = dfs_iterative(end);
 	if(path2.empty()) return false;
 	return true;
+}
+
+bool isborder(vector<vector<cell*> > c, cell* v)
+{
+	if(v->x == 1 || v->x == m || v->y == 1 || v->y == n) return true;
+	for(vector<cell*>::iterator it = v->neighbor.begin(); it != v->neighbor.end(); ++it)
+	{
+		if((*it)->is_obs) return true;
+	}
+	return false;
+}
+
+bool iscorner(vector<vector<cell*> > c, cell* v)
+{
+	int obs = 0;
+	for(int i = v->x-2; i <= v->x; ++i)
+	{
+		for(int j = v->y-2; j <= v->y; ++j)
+		{
+			if(i < 0 || i >= m || j < 0 || j >= n) continue;
+			if(c[i][j] != v && c[i][j]->is_obs) ++obs;
+		}
+	}
+	if(obs == 1) return true;
+	if(v == c[0][0] || v == c[m-1][n-1] || v == c[m-1][0] || v == c[0][n-1]) return true;
+	if(v->x == 1 || v->x == m || v->y == 1 || v->y == n)
+	{
+		obs = 0;
+		for(vector<cell*>::iterator it = v->neighbor.begin(); it != v->neighbor.end(); ++it)
+		{
+			if((*it)->is_obs) ++obs;
+		}
+		if(obs == 1) return true;
+	}
+	return false;
+}
+
+vector<cell*> dfs_special(vector<vector<cell*> > c, cell* v, cell* target)
+{
+	vector<cell*> path;
+	vector<cell*>::iterator it, it1;
+	stack<cell*> S;
+	S.push(v);
+	v->dfsParent = NULL;
+	v->is_path = true;
+	for(int i = 0; i < m; ++i)
+	{
+		for(int j = 0; j < n; ++j)
+		{
+			c[i][j]->is_visit = false;
+		}
+	}
+	while(!S.empty())
+	{
+		v = S.top();
+		S.pop();
+		v->is_visit = true;
+		bool corner = false;
+		// cout << " v : (" << v->x << "," << v->y << ")\n";
+		if(v != target)
+		{
+			if(v->x == target->x || v->y == target->y)
+			{
+				bool find = false;
+				for(it = v->neighbor.begin(); it != v->neighbor.end(); ++it)
+				{
+					if(*it == target)
+					{
+						S.push((*it));
+						(*it)->dfsParent = v;
+						find = true;
+					}
+				}
+				if(find) continue;
+			}
+			for(it = v->neighbor.begin(); it != v->neighbor.end(); ++it)
+			{
+				if((*it)->is_visit || (*it)->is_obs) continue;
+				if(!isborder(c, (*it)) && (*it) != target && !iscorner(c, (*it))) continue;
+				else if((*it) == target)
+				{
+					S.push((*it));
+					(*it)->dfsParent = v;
+				}
+				if(iscorner(c, v) && iscorner(c, (*it))) continue;
+			// cout << "it : (" << (*it)->x << "," << (*it)->y << ") " /*<< iscorner(c, (*it))*/ << endl;
+				if(!iscorner(c, v) && v->dfsParent != NULL)
+				{
+					if(v->dfsParent->x == v->x)
+					{
+						if((*it)->x != v->x) continue;
+					}
+					else
+					{
+						if((*it)->y != v->y) continue;
+					}
+				}
+				cell *tmpchild = *it, *tmpchild1, *tmpchild2;
+
+				// cell* tmpNeighbor = new cell(1, 1);
+				// tmpNeighbor->d = 1e9;
+
+				// if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
+				// {
+				// 	for(it1 = v->neighbor.begin(); it1 != v->neighbor.end(); ++it1)
+				// 	{
+				// 		if(!(*it1)->is_path && (*it1) != tmpchild && (*it1)->d <= tmpNeighbor->d && !(*it1)->is_obs)
+				// 		{
+				// 			tmpNeighbor = *it1;
+				// 		}
+				// 	}
+				// 	tmpchild1 = tmpchild;
+				// 	tmpchild = tmpNeighbor;
+				// 	if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
+				// 	{
+				// 		// cout << "HI\n";
+				// 		for(it1 = v->neighbor.begin(); it1 != v->neighbor.end(); ++it1)
+				// 		{
+				// 			if(!(*it1)->is_path && (*it1) != tmpchild && (*it1)->d <= tmpNeighbor->d && !(*it1)->is_obs && (*it) != tmpchild1)
+				// 			{
+				// 				tmpNeighbor = *it1;
+				// 			}
+				// 		}
+				// 		tmpchild2 = tmpchild;
+				// 		tmpchild = tmpNeighbor;
+				// 		if(!tmpchild->parent.empty() && nonNeighboringViolation(tmpchild, v))
+				// 		{
+				// 			for(it1 = v->neighbor.begin(); it1 != v->neighbor.end(); ++it1)
+				// 			{
+				// 				if(!(*it1)->is_path && (*it1) != tmpchild && (*it1)->d <= tmpNeighbor->d && !(*it1)->is_obs && (*it1) != tmpchild1 && (*it1) != tmpchild2)
+				// 				{
+				// 					tmpNeighbor = *it1;
+				// 				}
+				// 			}
+				// 			tmpchild = tmpNeighbor;
+				// 		}					
+				// 	}
+				// 	if(tmpNeighbor->d == 1e9)
+				// 	{
+				// 		return path;
+				// 	}
+				// }
+				S.push(tmpchild);
+				tmpchild->dfsParent = v;
+				// tmpchild->is_path = true;
+			}
+		}
+		else
+		{
+			// cout << "v : (" << v->x << "," << v->y << ") ";
+			vector<cell*> tmpPath;
+			tmpPath.push_back(v);
+			bool delta = true;
+			// cout << "(" << v->x << "," << v->y << ")";
+			cell* tmpc;
+			tmpc = v;
+			while(tmpc->dfsParent != NULL)
+			{
+				tmpc = tmpc->dfsParent;
+				tmpPath.push_back(tmpc);
+				if(tmpc->x == out_x && tmpc->y == out_y) delta = false;
+				// cout << "(" << tmpc->x << "," << tmpc->y << ")";
+			}
+			// cout << delta;
+			// cout << endl;
+			if(delta)
+			{
+				for(it = tmpPath.begin(); it != tmpPath.end(); ++it)
+				{
+					(*it)->is_path = true;
+				}
+				path = tmpPath;
+				return path;
+			}
+			else
+			{
+				for(it = tmpPath.begin(); it != tmpPath.end(); ++it)
+				{
+					(*it)->is_path = false;
+				}
+				tmpPath.clear();
+			}
+			// cout << endl;
+		}
+	}
+	if(path.size() == 1)
+	{
+		path.clear();
+	}
+	return path;
 }
